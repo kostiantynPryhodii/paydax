@@ -2,15 +2,24 @@
 
 import { useEffect } from "react";
 
+declare global {
+  interface Window {
+    UnicornStudio?: {
+      isInitialized: boolean;
+      init: () => void;
+    };
+  }
+}
+
 export default function AnimationHero() {
   useEffect(() => {
-    if (window.UnicornStudio?.isInitialized) return;
+    if (window?.UnicornStudio?.isInitialized) return;
 
     const script = document.createElement("script");
     script.src =
       "https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.25/dist/unicornStudio.umd.js";
     script.onload = () => {
-      if (!window.UnicornStudio.isInitialized) {
+      if (window.UnicornStudio && !window.UnicornStudio.isInitialized) {
         window.UnicornStudio.init();
         window.UnicornStudio.isInitialized = true;
       }
