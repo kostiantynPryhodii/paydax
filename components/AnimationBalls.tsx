@@ -2,9 +2,87 @@
 
 import { useEffect, useRef } from "react";
 
+class Particle {
+  hue!: number;
+  alpha!: number;
+  size!: number;
+  x!: number;
+  y!: number;
+  velocity!: number;
+  changed!: boolean | null;
+  changedFrame!: number;
+  maxChangedFrames!: number;
+
+  constructor(
+    private ctx: CanvasRenderingContext2D,
+    private hueRef: React.MutableRefObject<number>,
+    private pointRef: React.MutableRefObject<{ x: number; y: number }>,
+    private width: number,
+    private height: number
+  ) {
+    this.init();
+  }
+
+  init() {
+    this.hue = this.hueRef.current;
+    this.alpha = 0;
+    this.size = Math.random() * 4 + 1;
+    this.x = Math.random() * this.width;
+    this.y = Math.random() * this.height;
+    this.velocity = this.size * 0.5;
+    this.changed = null;
+    this.changedFrame = 0;
+    this.maxChangedFrames = 50;
+  }
+
+  draw() {
+    const ctx = this.ctx;
+    if (!ctx) return;
+
+    ctx.strokeStyle = `hsla(${this.hue}, 100%, 50%, ${this.alpha})`;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    this.update();
+  }
+
+  update() {
+    if (this.changed) {
+      this.alpha *= 0.92;
+      this.size += 2;
+      this.changedFrame++;
+      if (this.changedFrame > this.maxChangedFrames) {
+        this.reset();
+      }
+    } else if (
+      this.distance(this.pointRef.current.x, this.pointRef.current.y) < 50
+    ) {
+      this.changed = true;
+    } else {
+      const dx = this.pointRef.current.x - this.x;
+      const dy = this.pointRef.current.y - this.y;
+      const angle = Math.atan2(dy, dx);
+
+      this.alpha += 0.01;
+      this.x += this.velocity * Math.cos(angle);
+      this.y += this.velocity * Math.sin(angle);
+      this.velocity += 0.02;
+    }
+  }
+
+  reset() {
+    this.init();
+  }
+
+  distance(x: number, y: number) {
+    return Math.hypot(x - this.x, y - this.y);
+  }
+}
+
 export default function AnimationBalls() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const particles = useRef<any[]>([]);
+  const particles = useRef<Particle[]>([]);
   const point = useRef({ x: 0, y: 0 });
   const hue = useRef(0);
   const max = 200;
@@ -37,81 +115,9 @@ export default function AnimationBalls() {
     leftImg.onload = onImageLoad;
     rightImg.onload = onImageLoad;
 
-    function random(min: number, max: number) {
-      return Math.random() * (max - min) + min;
-    }
-
-    class Particle {
-      hue!: number;
-      alpha!: number;
-      size!: number;
-      x!: number;
-      y!: number;
-      velocity!: number;
-      changed!: boolean | null;
-      changedFrame!: number;
-      maxChangedFrames!: number;
-
-      constructor() {
-        this.init();
-      }
-
-      init() {
-        this.hue = hue.current;
-        this.alpha = 0;
-        this.size = random(1, 5);
-        this.x = random(0, width);
-        this.y = random(0, height);
-        this.velocity = this.size * 0.5;
-        this.changed = null;
-        this.changedFrame = 0;
-        this.maxChangedFrames = 50;
-      }
-
-      draw() {
-        if (ctx) {
-          ctx.strokeStyle = `hsla(${this.hue}, 100%, 50%, ${this.alpha})`;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
-          ctx.stroke();
-        }
-        this.update();
-      }
-
-      update() {
-        if (this.changed) {
-          this.alpha *= 0.92;
-          this.size += 2;
-          this.changedFrame++;
-          if (this.changedFrame > this.maxChangedFrames) {
-            this.reset();
-          }
-        } else if (this.distance(point.current.x, point.current.y) < 50) {
-          this.changed = true;
-        } else {
-          const dx = point.current.x - this.x;
-          const dy = point.current.y - this.y;
-          const angle = Math.atan2(dy, dx);
-
-          this.alpha += 0.01;
-          this.x += this.velocity * Math.cos(angle);
-          this.y += this.velocity * Math.sin(angle);
-          this.velocity += 0.02;
-        }
-      }
-
-      reset() {
-        this.init();
-      }
-
-      distance(x: number, y: number) {
-        return Math.hypot(x - this.x, y - this.y);
-      }
-    }
-
     for (let i = 0; i < max; i++) {
       setTimeout(() => {
-        const p = new Particle();
+        const p = new Particle(ctx, hue, point, width, height);
         particles.current.push(p);
       }, i * 10);
     }
@@ -126,8 +132,10 @@ export default function AnimationBalls() {
         ctx.fillStyle = "rgba(0,0,0,0.2)";
         ctx.fillRect(0, 0, width, height);
       }
+
       particles.current.forEach((p) => p.draw());
       hue.current += 0.3;
+
       requestAnimationFrame(animate);
     }
 
@@ -175,7 +183,6 @@ export default function AnimationBalls() {
           left: 0,
           width: "100%",
           height: "100%",
-          /*zIndex: -1,*/
         }}
       />
     </>
