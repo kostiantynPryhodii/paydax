@@ -42,15 +42,15 @@ export default function AnimationBalls() {
     }
 
     class Particle {
-      hue: number;
-      alpha: number;
-      size: number;
-      x: number;
-      y: number;
-      velocity: number;
-      changed: boolean | null;
-      changedFrame: number;
-      maxChangedFrames: number;
+      hue!: number;
+      alpha!: number;
+      size!: number;
+      x!: number;
+      y!: number;
+      velocity!: number;
+      changed!: boolean | null;
+      changedFrame!: number;
+      maxChangedFrames!: number;
 
       constructor() {
         this.init();
@@ -69,10 +69,12 @@ export default function AnimationBalls() {
       }
 
       draw() {
-        ctx.strokeStyle = `hsla(${this.hue}, 100%, 50%, ${this.alpha})`;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
-        ctx.stroke();
+        if (ctx) {
+          ctx.strokeStyle = `hsla(${this.hue}, 100%, 50%, ${this.alpha})`;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
         this.update();
       }
 
@@ -115,13 +117,15 @@ export default function AnimationBalls() {
     }
 
     function animate() {
-      ctx.clearRect(0, 0, width, height);
+      if (ctx) {
+        ctx.clearRect(0, 0, width, height);
 
-      ctx.drawImage(leftImg, 0, 0);
-      ctx.drawImage(rightImg, width - rightImg.width, 0);
+        ctx.drawImage(leftImg, 0, 0);
+        ctx.drawImage(rightImg, width - rightImg.width, 0);
 
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
-      ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fillRect(0, 0, width, height);
+      }
       particles.current.forEach((p) => p.draw());
       hue.current += 0.3;
       requestAnimationFrame(animate);

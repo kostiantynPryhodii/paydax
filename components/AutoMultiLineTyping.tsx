@@ -7,6 +7,10 @@ export default function TypingWithColoredLastWord({
   text,
   lastWord,
   speed = 50,
+}: {
+  text: string;
+  lastWord: string;
+  speed: number;
 }) {
   const [index, setIndex] = useState(0);
 
